@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import './App.css';
+import List from './Components/PokemonList';
 
 const Container = styled.div`
   border: 0.1rem solid black;
@@ -12,14 +13,13 @@ const Container = styled.div`
 const App = () => {
   const [name, setName] = useState('');
   const [poke, setPoke] = useState({});
-  const [page, setPage] = useState({ offset: 0, limit: 10 });
+  const [page, setPage] = useState(0);
   const [pokemons, setPokemons] = useState([]);
 
-  const getPoke = async () => {
+  const getPoke = async p => {
     try {
-      const poke = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
+      const poke = await fetch(`https://pokeapi.co/api/v2/pokemon/${p}`);
       const parsed = await poke.json();
-      console.log(parsed);
       setPoke(parsed);
     } catch (err) {
       console.log(err);
@@ -27,10 +27,9 @@ const App = () => {
   };
 
   const getPokemons = async () => {
-    console.log(page.offset);
     try {
       const pokemon = await fetch(
-        `https://pokeapi.co/api/v2/pokemon/?offset=${page.offset}&limit=${page.limit}`
+        `https://pokeapi.co/api/v2/pokemon/?offset=${page * 10}&limit=10`
       );
       const parsed = await pokemon.json();
       setPokemons(parsed.results);
@@ -39,33 +38,42 @@ const App = () => {
     }
   };
 
-  const prevPage = () => {};
-
-  const nextPage = () => {
-    const { offset } = page;
-    setPage({ ...page, offset: offset + 10 });
+  const prevPage = async () => {
+    setPage(page - 1);
+    try {
+      const pokemon = await fetch(
+        `https://pokeapi.co/api/v2/pokemon/?offset=${(page - 1) * 10}&limit=10`
+      );
+      const parsed = await pokemon.json();
+      setPokemons(parsed.results);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
-  useEffect(() => {
-    getPokemons();
-  }, []);
+  const nextPage = async () => {
+    setPage(page + 1);
+    try {
+      const pokemon = await fetch(
+        `https://pokeapi.co/api/v2/pokemon/?offset=${(page + 1) * 10}&limit=10`
+      );
+      const parsed = await pokemon.json();
+      setPokemons(parsed.results);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
     <div className="App">
       <h1>PokeDex</h1>
       <input onChange={e => setName(e.target.value)} value={name} />
-      <button onClick={getPoke}>record!</button>
+      <button onClick={() => getPoke(name)}>record!</button>
       <button onClick={getPokemons}>view pokemon</button>
       <button onClick={nextPage}>next</button>
+      <button onClick={prevPage}>back</button>
       <Container>
-        {pokemons.map((p, i) => {
-          return (
-            <div key={i}>
-              {p.name}
-              {page.offset}
-            </div>
-          );
-        })}
+        <List pokemons={pokemons} getPoke={getPoke} />
       </Container>
     </div>
   );
