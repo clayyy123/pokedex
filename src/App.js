@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import './App.css';
 
@@ -27,6 +27,7 @@ const App = () => {
   };
 
   const getPokemons = async () => {
+    console.log(page.offset);
     try {
       const pokemon = await fetch(
         `https://pokeapi.co/api/v2/pokemon/?offset=${page.offset}&limit=${page.limit}`
@@ -38,15 +39,16 @@ const App = () => {
     }
   };
 
-  const prevPage = () => {
-    try {
-    } catch (err) {}
-  };
+  const prevPage = () => {};
 
   const nextPage = () => {
-    const newP = { offset: page.offset + 10, limit: page.limit + 10 };
-    setPage(newP);
+    const { offset } = page;
+    setPage({ ...page, offset: offset + 10 });
   };
+
+  useEffect(() => {
+    getPokemons();
+  }, []);
 
   return (
     <div className="App">
@@ -54,9 +56,15 @@ const App = () => {
       <input onChange={e => setName(e.target.value)} value={name} />
       <button onClick={getPoke}>record!</button>
       <button onClick={getPokemons}>view pokemon</button>
+      <button onClick={nextPage}>next</button>
       <Container>
         {pokemons.map((p, i) => {
-          return <div>{p.name}</div>;
+          return (
+            <div key={i}>
+              {p.name}
+              {page.offset}
+            </div>
+          );
         })}
       </Container>
     </div>
